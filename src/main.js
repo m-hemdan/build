@@ -9,7 +9,9 @@ import * as firebase from 'firebase'
 import Vuelidate from 'vuelidate'
 import contactUs from './components/contact/contac.vue'
 import 'vuetify-media-player/src/style.styl'
+import { picker} from 'emoji-mart-vue'
 Vue.component("contactUS",contactUs)
+
 Vue.config.productionTip = false
 Vue.use(Vuelidate)
 Vue.use(VueGoogleMaps,{

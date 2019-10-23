@@ -1,5 +1,5 @@
 <template >
-    <div class="buildDetailsPage">
+    <div class="buildDetailsPage allPage">
         <v-container fluid style="margin: 0px; padding: 0px; width: 100%">
             <v-layout >
                 <v-flex xs12 align-center class="headerBuildDetails animated bounceInLeft" display-2>
@@ -52,13 +52,15 @@
                        Date of delivered :  {{returnBuild.dateArrive}} 
                        <v-layout justify-start align-start>
                            <v-flex>
-                            <v-list class="listOfData" dark>
+                            <v-list class="listOfData" dark style="background:none">
                                 <v-list-tile
                                     v-for="item in returnBuild.dataBuild"
                                     :key="item.key"
                                  >
                                   <v-list-tile-avatar>
-                                <v-icon color="gray">edit</v-icon>
+                               <i class="material-icons">
+                                    account_circle
+                                    </i>
                                 </v-list-tile-avatar>
                                 <v-list-tile-content>
                                     <v-list-tile-title v-text="item"></v-list-tile-title>
@@ -263,7 +265,7 @@ export default {
 }
 </script>
 <style >
-   .buildDetailsPage
+   .buildDetailsPage,.allPage
    {
        
    
@@ -351,8 +353,9 @@ export default {
   }
   .listOfData
   {
+     
       font-size:.5em;
-    background: none;
+
     
   }
   .showVideo

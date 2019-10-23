@@ -1,6 +1,7 @@
 import Vuex from 'vuex'
 import Vue from 'vue'
 import * as firebase  from 'firebase'
+import { stat } from 'fs';
 Vue.use(Vuex)
 export const store=new Vuex.Store({
     state:{
@@ -39,7 +40,11 @@ export const store=new Vuex.Store({
      loading:false ,
      lat:"10",
      lang:"10",
-     error:""
+     error:"",
+     allUser:{
+         id:'',
+         email:''
+            }
     },
     getters:{
         pageContent(state)
@@ -78,6 +83,10 @@ export const store=new Vuex.Store({
         error(state)
         {
            return state.error 
+        },
+        allUser(state)
+        {
+            return state.allUser
         }
         
       
@@ -128,7 +137,7 @@ export const store=new Vuex.Store({
                const key =data.key
             
                commit("isLoading",false) 
-                 alert("your message already send")
+               alert("your message already send")
            })
            .catch(error=>
             {
@@ -137,6 +146,36 @@ export const store=new Vuex.Store({
                 commit("error",error)
             })
     
+       },
+       signUp({commit,dispatch},payload)
+       {
+          
+          firebase.auth().createUserWithEmailAndPassword(payload.email,payload.password)
+          .then(data=>{
+              console.log("succ")
+              const newUser={
+                  id:firebase.auth().currentUser.uid
+                 }
+                 commit("allUser",newUser)
+                 dispatch("StoreAllDataUser",payload)
+             
+                 
+          })
+          .catch(error=>{
+            commit("error",error)
+        })
+       },
+       StoreAllDataUser({commit,getters},payload)
+       {
+        commit("isLoading",false)
+        const newUser={
+            firstname:payload.fname,
+            lastname:payload.lname,
+            email:payload.email,
+            password:payload.password,
+            createId:getters.user.id
+
+        }
        }
 
     }
