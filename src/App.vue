@@ -5,9 +5,11 @@
               <v-flex xs1 text-xs-center   v-for="item in pageTitle" :key="item.id">
                 <v-btn  @click="nextPage(item.link)"  dark flat>{{item.name}}</v-btn>
               </v-flex>
+             
            </v-layout>
  
        </div>
+       
     <v-toolbar class="toolbarMain" >
       <v-layout justify-space-between align-center >
       <v-flex xs3 >
@@ -21,12 +23,13 @@
       <v-flex  xs3>
         <img class=" imgLogo"  src="http://elmasria.co/resources/assets/site/images/logo.png">
       </v-flex>
+     
       <v-flex xs2 class="rightToolbar"  hidden-sm-and-down>
         <v-layout  justify-end>
             <v-flex  >  <a href="" class="fa fa-telegram"></a></v-flex>
             <v-flex >      <a href="" class="fa fa-twitter"></a></v-flex>
                
-         <v-flex>    <v-btn flat="" class="succ" dark>submit a project</v-btn></v-flex>
+         <v-flex>    <v-btn flat="" dark v-if="nameShow" class="animated bounceInDown succ"> Hello {{nameShow}}</v-btn></v-flex>
         </v-layout>
      </v-flex>
       </v-layout>
@@ -77,6 +80,7 @@ export default {
   data () {
     return {
       navShow:false,
+      
       items:["vue","anglur","react"]
     }
   },
@@ -85,6 +89,10 @@ export default {
     pageTitle()
     {
       return this.$store.getters.pageContent
+    },
+    nameShow()
+    {
+      return this.$store.getters.nameShow
     }
   },
   methods:

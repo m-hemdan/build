@@ -1,7 +1,7 @@
 import Vuex from 'vuex'
 import Vue from 'vue'
 import * as firebase  from 'firebase'
-import { stat } from 'fs';
+
 Vue.use(Vuex)
 export const store=new Vuex.Store({
     state:{
@@ -40,12 +40,16 @@ export const store=new Vuex.Store({
      loading:false ,
      lat:"10",
      lang:"10",
-     error:"",
-     allUser:{
+     Error:"",
+     userVerify:{
          id:'',
          email:''
-            }
+        },
+        nameShow:'',
+     postsItem:[]
+      
     },
+    
     getters:{
         pageContent(state)
         {
@@ -80,13 +84,24 @@ export const store=new Vuex.Store({
         {
            return state.lang
         },
-        error(state)
+        Error(state)
         {
-           return state.error 
+           return state.Error 
         },
-        allUser(state)
+        userVerify(state)
         {
-            return state.allUser
+            return state.userVerify
+        },
+        nameShow(state)
+        {
+            return state.nameShow
+        },
+        postsItem(state)
+        {
+            
+            return state.postsItem.sort(function(a,b){
+                return new Date(b.postDate)-new Date(a.postDate)
+            })
         }
         
       
@@ -97,19 +112,25 @@ export const store=new Vuex.Store({
       {
           state.loading=payload
       },
-        setLat({state},payload)
+    Error(state,payload)
         {
-            state.lat=payload
-           
+            state.Error=payload
         },
-        setLang({state},payload)
+        userVerify(state,payload)
         {
-            state.lang=payload
-           
+            state.userVerify.id=payload.id
         },
-        error({state},payload)
+        nameShow(state,payload)
         {
-            state.error=payload
+            state.nameShow=payload
+        },
+        insertPost(state,payload)
+        {
+            for(let k in payload)
+            {
+                state.postsItem.push(payload[k])
+            }
+
         }
     }
     ,
@@ -139,12 +160,7 @@ export const store=new Vuex.Store({
                commit("isLoading",false) 
                alert("your message already send")
            })
-           .catch(error=>
-            {
-                commit("isloading",false)
-                alert(error)
-                commit("error",error)
-            })
+          
     
        },
        signUp({commit,dispatch},payload)
@@ -156,27 +172,119 @@ export const store=new Vuex.Store({
               const newUser={
                   id:firebase.auth().currentUser.uid
                  }
-                 commit("allUser",newUser)
-                 dispatch("StoreAllDataUser",payload)
+                 commit("userVerify",newUser)
+                 dispatch("storeAllDataUser",payload)
+             console.log(newUser)
              
                  
           })
-          .catch(error=>{
-            commit("error",error)
-        })
+         
        },
-       StoreAllDataUser({commit,getters},payload)
+       storeAllDataUser({commit,getters},payload)
        {
-        commit("isLoading",false)
+        commit("isLoading",true)
         const newUser={
             firstname:payload.fname,
             lastname:payload.lname,
             email:payload.email,
             password:payload.password,
-            createId:getters.user.id
+            createId:getters.userVerify.id
+            }
+        firebase.database().ref('users').push(newUser)
+        .then(data=>{ 
+         const key=data.key
+            alert("Now you have account")
+            commit("isLoading",false)
 
+        })
+        .catch(error=>{
+            commit("Error",error)
+            commit("isLoading",false)
+            console.log(error)
+        })
+
+       },
+       signIn({commit,dispatch},payload)
+       {
+           firebase.auth().signInWithEmailAndPassword(payload.email,payload.password)
+           .then(data=>{
+               const newUser={
+                   id:firebase.auth().currentUser.uid
+               }
+               commit("userVerify",newUser)
+               dispatch("signInUser")
+
+           })
+           .catch(error=>{
+               commit("Error",error)
+           })
+
+       },
+       signInUser({commit,getters,dispatch},payload)
+      {
+          commit("isLoading",true)
+          const userId=getters.userVerify.id
+          firebase.database().ref('users').once('value')
+          .then(data=>{
+              const obj=data.val()
+              for(let key in obj)
+              {
+                  if(obj[key].createId==userId)
+                { 
+                     commit("nameShow",obj[key].firstname)
+                  console.log("ok user")
+                }
+
+              }
+              commit("isLoading",false)
+          })
+          .catch(error=>{
+              commit("isLoading",false)
+              console.log(error)
+          })
+      },
+       post({commit,getters},payload)
+        {
+            commit("isLoading",true)
+            const obj={
+               postText:payload.postText,
+               postDate:payload.dateNow.toISOString(),
+               postOwner:getters.nameShow,
+               ownerId:getters.userVerify.id
+
+            }
+          firebase.database().ref("post").push(obj)
+          .then(data=>{ 
+              getters.postsItem.push(obj)
+              console.log("succ post")
+             commit("isLoading",false)
+          })
+          .catch(error=>{
+              commit("isLoading",false)
+          })
+        },
+        returnPost({commit})
+        {
+            const postArray=[]
+            commit("isLoading",true)
+            firebase.database().ref("post").once('value')
+            .then(data=>{
+               
+                const obj=data.val() 
+                for(let key in obj)
+                {
+                    let x =obj[key]
+                    postArray.push(x)
+
+                }
+                commit("insertPost",postArray)
+                commit("isLoading",false)
+            })
+            .catch(error=>{
+                commit("isLoading",false)
+            })
         }
-       }
+
 
     }
 
