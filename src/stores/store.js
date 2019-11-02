@@ -46,7 +46,9 @@ export const store=new Vuex.Store({
          email:''
         },
         nameShow:'',
-     postsItem:[]
+     postsItem:[],
+    
+     
       
     },
     
@@ -102,6 +104,10 @@ export const store=new Vuex.Store({
             return state.postsItem.sort(function(a,b){
                 return new Date(b.postDate)-new Date(a.postDate)
             })
+        },
+        likenum(state)
+        {
+            return state.likenum
         }
         
       
@@ -131,7 +137,8 @@ export const store=new Vuex.Store({
                 state.postsItem.push(payload[k])
             }
 
-        }
+        },
+      
     }
     ,
     actions:
@@ -250,13 +257,23 @@ export const store=new Vuex.Store({
                postText:payload.postText,
                postDate:payload.dateNow.toISOString(),
                postOwner:getters.nameShow,
-               ownerId:getters.userVerify.id
+               ownerId:getters.userVerify.id,
+               like:0
+               
 
             }
           firebase.database().ref("post").push(obj)
           .then(data=>{ 
-              getters.postsItem.push(obj)
-              console.log("succ post")
+               const key=data.val()
+               getters.postsItem.push({
+                   id:key,
+                   postText:obj.postText,
+                   postDate:obj.postText,
+                   postOwner:obj.postOwner,
+                   ownerId:obj.ownerId,
+                   like:0
+               })
+             
              commit("isLoading",false)
           })
           .catch(error=>{
@@ -265,25 +282,76 @@ export const store=new Vuex.Store({
         },
         returnPost({commit})
         {
-            const postArray=[]
+           
             commit("isLoading",true)
             firebase.database().ref("post").once('value')
             .then(data=>{
-               
+            
+                const postArray=[]
                 const obj=data.val() 
                 for(let key in obj)
-                {
-                    let x =obj[key]
-                    postArray.push(x)
-
+                { 
+                    postArray.push({
+                        id:key,
+                        postText:obj[key].postText,
+                        postDate:obj[key].postDate,
+                        postOwner:obj[key].postOwner,
+                        ownerId:obj[key].ownerId,
+                        comment:obj[key].comment,
+                        like:obj[key].like
+                    })
+        
                 }
+                console.log(postArray)
+      
                 commit("insertPost",postArray)
                 commit("isLoading",false)
             })
             .catch(error=>{
                 commit("isLoading",false)
             })
-        }
+        },
+        storeComment({commit},payload)
+        {
+            commit("isLoading",true)
+            firebase.database().ref("/post/"+payload.selectPostId).child("/comment/").push(payload)
+            .then(data=>{
+             
+                commit("isLoading",false)
+            })
+            .catch(error=>{
+                console.log(error)
+                commit("Error",error)
+                commit("isLoading",false)
+            })
+        },
+        increaseLike({commit,dispatch},itemId)
+        {
+           
+            let num=0
+
+            firebase.database().ref("/post/"+itemId+"/like").once('value')
+           .then(data=>{
+              num=data.val()+1
+               
+               
+                  dispatch("likeFun",{itemId,num})
+           })
+           .catch(error=>{
+       
+           })
+       },
+       likeFun({commit},payload)
+       {
+           const obj={}
+               obj.like=payload.num
+           
+           
+            firebase.database().ref("post").child(payload.itemId).update(obj)
+            .then(()=>{
+                
+            })
+       }
 
 
     }

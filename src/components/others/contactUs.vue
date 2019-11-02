@@ -23,12 +23,13 @@
        <v-flex xs12 md5  class="">
           <v-layout column>
               <v-flex  v-if="loading" 
-              style="margin:auto"><v-progress-circular
+              style="margin:auto">
+              <v-progress-circular
                 indeterminate
-                color="red"
+                color="blue"
                 size="90"
                 ></v-progress-circular></v-flex>
-              <v-flex class="postInner" ma-4  pa-3 
+              <v-flex class="postInner animated fadeIn duration-3s" ma-4  pa-3 
               v-for="item in returnPost" :key="item.key">
               <v-layout><v-flex xs1 md2> <v-avatar color="indigo">
                <v-icon dark>account_circle</v-icon></v-avatar>
@@ -47,22 +48,25 @@
                     <v-flex><v-img class="postImg" src="https://images.prop24.com/223797324/Crop525x350"></v-img> </v-flex>
                 </v-layout>
                 <v-layout justify-space-between align-center style="font-size:12px">
-                  <v-flex pa-2 xs3 ><v-icon color="indigo" >thumb_up</v-icon> <span style="color:gray"> 6</span></v-flex>
+                  <v-flex pa-2 xs3 ><v-icon color="indigo" >thumb_up</v-icon> 
+       
+                  <span style="color:gray" v-if="likeShow"> {{alreadyLike(item.like)}} </span>
+                  <span  style="color:gray"  v-else>{{ increaseLike(item.id,item.like) }}</span></v-flex>
                   <v-flex xs3></v-flex>
                   <v-flex pa-2 xs3 ><v-btn depressed color="transparent" class="likeBtn"><v-icon color="indigo" >message</v-icon>comment 4</v-btn></v-flex>
                 </v-layout>
                 <v-layout justify-space-around  class="commentAndLike">
-                    <v-flex ><v-btn depressed color="transparent" class="likeBtn"><v-icon color="indigo" >thumb_up</v-icon>like</v-btn></v-flex>
+                    <v-flex ><v-btn depressed color="transparent" class="likeBtn" @click="increaseLike(item.id,item.like)"><v-icon :color="likeShow?'indigo':'gray'" >thumb_up</v-icon> like</v-btn></v-flex>
                     <v-flex ><v-btn depressed color="transparent" class="commentBtn">comment</v-btn></v-flex>
                 </v-layout>
                 <v-layout column >
                 <v-flex xs12>  <v-btn class="viewComment" depressed color="transparent"><v-icon  color="indigo">arrow_drop_down</v-icon>show 3 more comments</v-btn></v-flex>
-                <v-flex v-for="i in 5" :key="i.key" pa-1 class="comment">  
+                <v-flex v-for="comm in item.comment" :key="comm.key" pa-1 class="comment">  
                   <v-avatar color="indigo" size="36">
                     <v-icon dark>account_circle
                     </v-icon>
                  </v-avatar>
-                  <span> it is awesome</span>
+                  <span> {{comm.yourComment}}</span>
                   </v-flex>
                   <v-flex xs3 >
                       <v-layout class="specificComment">
@@ -85,7 +89,8 @@
                                 :append-outer-icon="yourComment ?'send':''"
                                  clear-icon="close"
                                 @click:append="showEmotion=! showEmotion"
-                                @click:append-outer="sendComment"
+                                @click:append-outer="sendComment(item.id)"
+                                v-on:keyup.enter="sendComment(item.id)"
                                 ></v-text-field>
                                         
                             </v-flex> 
@@ -122,7 +127,7 @@
                <v-flex xs12 class="signIn" ma-2 v-if="showSignIn">Sign In </v-flex>
                 <v-flex xs12 class="signIn" :class="animateSign" ma-2 v-if=" ! showSignIn">Sign up </v-flex>
           </v-layout>
-           <v-form v-if="showSignIn">
+           <v-form v-if="showSignIn" >
                <v-text-field solo 
                placeholder="Email..." v-model="emailVerify"></v-text-field>
                <v-text-field solo
@@ -133,7 +138,7 @@
              <v-divider></v-divider>
                <v-flex style="font-size:.7em" ma-3>
                    <p>if you are a new user click </p>
-                  <v-btn  color="blue " flat  @click="signUpShow">sign Up</v-btn>
+                  <v-btn  color="green " style="display:inline" flat  @click="signUpShow">sign Up</v-btn>
                </v-flex>
            </v-form>
            <v-form v-if="! showSignIn" :class="animateSign" >
@@ -197,6 +202,7 @@ export default {
      data()
     {
         return {
+            likeShow:true,
             dateNow:new Date,
             postSend:'',
             showSignIn:true,
@@ -244,9 +250,16 @@ export default {
         {
            this.yourComment+=" "+emotion
         },
-        sendComment()
+        sendComment(itemID)
         {
-            alert(this.yourComment)
+            const obj={
+                yourComment:this.yourComment,
+                selectPostId:itemID
+
+            }
+            this.$store.dispatch("storeComment",obj)
+            this.yourComment=''
+       
         },
         signIn()
         {
@@ -287,14 +300,14 @@ export default {
             this.postSend=''
         },
         
-      returnDate(time)
-      {
-          return time.substring(0,10)
-      },
-      returnTime(time)
-      {
-        return time.substring(11,16)
-      },
+        returnDate(time)
+        {
+            return time.substring(0,10)
+        },
+        returnTime(time)
+        {
+            return time.substring(11,16)
+        },
       handleScroll()
       {
           const elem=document.getElementById("imgSection")
@@ -302,14 +315,29 @@ export default {
           {
             if(window.scrollY> elem.offsetTop)
             {
-                console.log("ok")
+              
             }
           }
           else
           {
               return
           }
-      }
+      },
+      increaseLike(itemID,itemLike)
+      {
+          
+         this.$store.dispatch("increaseLike",itemID)
+         var c=this.alreadyLike(itemLike,'press')
+         this.likeShow=false
+         c++
+         return c
+       },
+        alreadyLike(linkNum,str)
+        {
+            return linkNum
+            
+        },
+     
     },
     beforeMount()
     {
